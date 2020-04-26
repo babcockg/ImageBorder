@@ -53,25 +53,25 @@ namespace AddBorder
             }
 
             #region args for scale and fillColor
-            // if (args.Length > 1)
-            // {
-            //     string scaleString = args[1];
-            //     float argValue = float.Parse(scaleString);
-            //     if (argValue > 1.0f)
-            //     {
-            //         scale = argValue;
-            //     }
-            //     else
-            //     {
-            //         scale = 1.0f + float.Parse(scaleString) / 100f;
-            //     }
-            // }
+            if (args.Length > 1)
+            {
+                string scaleString = args[1];
+                float argValue = float.Parse(scaleString);
+                if (argValue > 1.0f)
+                {
+                    scale = argValue;
+                }
+                else
+                {
+                    scale = 1.0f + float.Parse(scaleString) / 100f;
+                }
+            }
 
-            // if (args.Length > 2)
-            // {
-            //     string[] comps = args[2].Split(new char[] { ',' });
-            //     fillColor = Color.FromArgb(int.Parse(comps[0]), int.Parse(comps[1]), int.Parse(comps[2]));
-            // }
+            if (args.Length > 2)
+            {
+                string[] comps = args[2].Split(new char[] { ',' });
+                fillColor = Color.FromArgb(int.Parse(comps[0]), int.Parse(comps[1]), int.Parse(comps[2]));
+            }
             #endregion
 
             System.Console.WriteLine($"{"FillColor",-12} : {fillColor.R},{fillColor.G},{fillColor.B}");

@@ -11,10 +11,9 @@
             "preLaunchTask": "build",
             // If you have changed target frameworks, make sure to update the program path.
             "program": "${workspaceFolder}/bin/Debug/netcoreapp3.1/AddBorder.dll",
-            "args": [
-                "D:\\Users\\galen\\Documents\\ImageBorder\\Sample Images\\Sample.jpg",
+            "args": ["D:\\Users\\galen\\Documents\\ImageBorder\\Sample Images\\Sample.png" ,
                 "1.05",
-                "255,255,0"
+                "0,0,0"
             ],
             "cwd": "${workspaceFolder}",
             // For more information about the 'console' field, see https://aka.ms/VSCode-CS-LaunchJson-Console
