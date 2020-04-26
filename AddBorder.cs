@@ -9,8 +9,11 @@ namespace AddBorder
 {
     public static class AddThatBorder
     {
-        public static void ProvideBorder(string[] args, IConfigurationRoot config)
+        private static bool success = true;
+
+        public static bool ProvideBorder(string[] args, IConfigurationRoot config)
         {
+
             float scale = 1.05f;
             Color fillColor = Color.FromArgb(0, 0, 0);
 
@@ -31,15 +34,25 @@ namespace AddBorder
                     System.Console.WriteLine($"{exc.GetType().Name} : {exc.Message}");
                     exc = exc.InnerException;
                 }
+                scale = 1.05f;
+                fillColor = Color.FromArgb(0, 0, 0);
+            }
+
+            if ( scale <= 1.0f )
+            {
+                System.Console.WriteLine($"Scale must be larger than 1.0. User provided [{scale}]");
+                success = false;
+                return success;
             }
 
             if (!File.Exists(args[0]))
             {
                 System.Console.WriteLine($"ERROR: File [{args[0]}] does not exist.");
-                return;
+                success = false;
+                return success;
             }
 
-#region args for scale and fillColor
+            #region args for scale and fillColor
             // if (args.Length > 1)
             // {
             //     string scaleString = args[1];
@@ -59,10 +72,10 @@ namespace AddBorder
             //     string[] comps = args[2].Split(new char[] { ',' });
             //     fillColor = Color.FromArgb(int.Parse(comps[0]), int.Parse(comps[1]), int.Parse(comps[2]));
             // }
-#endregion
+            #endregion
 
-            System.Console.WriteLine($"{"FillColor", -12} : {fillColor.R},{fillColor.G},{fillColor.B}");
-            System.Console.WriteLine($"{"Scale", -12} : {scale}");
+            System.Console.WriteLine($"{"FillColor",-12} : {fillColor.R},{fillColor.G},{fillColor.B}");
+            System.Console.WriteLine($"{"Scale",-12} : {scale}");
 
             FileInfo fi = new FileInfo(args[0]);
             System.Console.WriteLine($"{"Source",-12} : {fi.FullName}");
@@ -77,12 +90,14 @@ namespace AddBorder
 
             path = path.Substring(0, idx);
             path += ".bordered" + fi.Extension;
-            System.Console.WriteLine($"{"Output", -12} : {path}");
+            System.Console.WriteLine($"{"Output",-12} : {path}");
             if (File.Exists(path))
             {
                 File.Delete(path);
             }
             resizePic(original, scale, fillColor).Save(path);
+
+            return success;
         }
 
         private static ImageCodecInfo GetEncoderInfo(String mimeType)
@@ -107,6 +122,8 @@ namespace AddBorder
 
         private static Bitmap resizePic(Bitmap original, float scale, Color fillColor)
         {
+            Bitmap bmp = new Bitmap(10, 10);
+
             if (scale == 1)
             {
                 return original;
@@ -129,30 +146,44 @@ namespace AddBorder
 
             int newWidth = original.Width + (2 * borderSize);
             int newHeight = original.Height + (2 * borderSize);
-            Bitmap bmp = new Bitmap(newWidth, newHeight);
 
-            using (Graphics gfx = Graphics.FromImage(bmp))
-            using (SolidBrush brush = new SolidBrush(fillColor))
+            try
             {
-                gfx.FillRectangle(brush, 0, 0, bmp.Width, bmp.Height);
+                bmp = new Bitmap(newWidth, newHeight);
+
+                using (Graphics gfx = Graphics.FromImage(bmp))
+                using (SolidBrush brush = new SolidBrush(fillColor))
+                {
+                    gfx.FillRectangle(brush, 0, 0, bmp.Width, bmp.Height);
+                }
+
+                Graphics graphics = Graphics.FromImage(bmp);
+                graphics.InterpolationMode = InterpolationMode.High;
+                graphics.CompositingQuality = CompositingQuality.HighQuality;
+                graphics.SmoothingMode = SmoothingMode.AntiAlias;
+
+                // graphics.DrawString("Copyright 2020 by Galen Babcock",
+                //                     new Font(FontFamily.GenericSansSerif, 500, FontStyle.Bold),
+                //                     new SolidBrush(Color.White),
+                //                     new Point(1000,1000));
+
+                Rectangle destRect = new Rectangle(borderSize, borderSize, original.Width, original.Height);
+                Rectangle srcRect = new Rectangle(0, 0, original.Width, original.Height);
+                graphics.DrawImage(original,
+                            destRect,
+                            srcRect,
+                            GraphicsUnit.Pixel);
             }
-
-            Graphics graphics = Graphics.FromImage(bmp);
-            graphics.InterpolationMode = InterpolationMode.High;
-            graphics.CompositingQuality = CompositingQuality.HighQuality;
-            graphics.SmoothingMode = SmoothingMode.AntiAlias;
-
-            // graphics.DrawString("Copyright 2020 by Galen Babcock",
-            //                     new Font(FontFamily.GenericSansSerif, 500, FontStyle.Bold),
-            //                     new SolidBrush(Color.White),
-            //                     new Point(1000,1000));
-
-            Rectangle destRect = new Rectangle(borderSize, borderSize, original.Width, original.Height);
-            Rectangle srcRect = new Rectangle(0, 0, original.Width, original.Height);
-            graphics.DrawImage(original,
-                        destRect,
-                        srcRect,
-                        GraphicsUnit.Pixel);
+            catch (Exception exc)
+            {
+                while (exc != null)
+                {
+                    System.Console.WriteLine($"{exc.GetType().Name} : {exc.Message}");
+                    System.Console.WriteLine($"{exc.StackTrace}");
+                    exc = exc.InnerException;
+                }
+                success = false;
+            }
             return bmp;
         }
     }

@@ -11,6 +11,8 @@ namespace AddBorder
     {
         static void Main(string[] args)
         {
+            bool success = true;
+
             string basePath = Directory.GetParent(AppContext.BaseDirectory).FullName;
             var builder = new ConfigurationBuilder()
                 .SetBasePath(basePath)
@@ -22,20 +24,22 @@ namespace AddBorder
             {
                 Console.WriteLine(string.Join(",", args));
                 System.Console.WriteLine();
-                AddThatBorder.ProvideBorder(args, config);
+                success = AddThatBorder.ProvideBorder(args, config);
             }
             else
             {
                 System.Console.WriteLine("No files to process. Exiting.");
             }
 
+            if (!success)
+            {
+                Timer timer = new Timer();
+                timer.Elapsed += (sender, obj) => { System.Environment.Exit(0); ; };
+                timer.Interval = int.Parse(config["WaitInMilliseconds"]);
+                timer.Start();
 
-            Timer timer = new Timer();
-            timer.Elapsed += (sender, obj) => { System.Environment.Exit(0); ; };
-            timer.Interval = int.Parse(config["WaitInMilliseconds"]);
-            timer.Start();
-
-            Console.ReadKey();
+                Console.ReadKey();
+            }
         }
     }
 }
