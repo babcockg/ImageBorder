@@ -4,80 +4,84 @@ using System.Drawing;
 using System.Drawing.Imaging;
 using System.Drawing.Drawing2D;
 using Microsoft.Extensions.Configuration;
+using System.Globalization;
 
 namespace AddBorder
 {
     public static class AddThatBorder
     {
         private static bool success = true;
+        private static IConfigurationRoot _config;
+
+        public static Color ColorFromRgbTriplet(string[] rgb)
+        {
+            return Color.FromArgb(255, int.Parse(rgb[0]), int.Parse(rgb[1]), int.Parse(rgb[2]));
+        }
+
+        public static Color GetUserColor(string[] args)
+        {
+            string[] configColor = _config["FillColor"].Split(',');
+            Color result = ColorFromRgbTriplet(configColor);
+            foreach (var arg in args)
+            {
+                var components = arg.Split(',');
+                if (components.Length == 3)
+                {
+                    result = ColorFromRgbTriplet(components);
+                }
+            }
+            return result;
+        }
+
+        public static float GetUserScale(string[] args)
+        {
+            float result = float.Parse(_config["Scale"]);
+            foreach (var arg in args)
+            {
+                float tempFloat;
+                if (float.TryParse(arg, NumberStyles.AllowDecimalPoint, null, out tempFloat))
+                {
+                    result = float.Parse(arg);
+                }
+            }
+            return result;
+        }
+
+        public static FileInfo GetUserSrcFile(string[] args)
+        {
+            FileInfo fi = new FileInfo("---");
+            foreach (var arg in args)
+            {
+                if (File.Exists(arg))
+                {
+                    fi = new FileInfo(arg);
+                }
+            }
+            return fi;
+        }
 
         public static bool ProvideBorder(string[] args, IConfigurationRoot config)
         {
-
+            _config = config;
             float scale = 1.05f;
             Color fillColor = Color.FromArgb(0, 0, 0);
+            FileInfo srcFile;
 
-            try
-            {
-                string[] colorComponents = config["FillColor"].Split(new char[] { ',' });
-                if (colorComponents.Length == 3)
-                {
-                    fillColor = Color.FromArgb(int.Parse(colorComponents[0]), int.Parse(colorComponents[1]), int.Parse(colorComponents[2]));
-                }
+            fillColor = GetUserColor(args);
+            scale = GetUserScale(args);
+            srcFile = GetUserSrcFile(args);
 
-                scale = float.Parse(config["Scale"]);
-            }
-            catch (Exception exc)
+            if (!srcFile.Exists)
             {
-                while (exc != null)
-                {
-                    System.Console.WriteLine($"{exc.GetType().Name} : {exc.Message}");
-                    exc = exc.InnerException;
-                }
-                scale = 1.05f;
-                fillColor = Color.FromArgb(0, 0, 0);
+                System.Console.WriteLine($"File [{srcFile.FullName}] does not exist.");
+                System.Console.WriteLine("Exiting.");
+                System.Environment.Exit(-1);
             }
-
-            if ( scale <= 1.0f )
-            {
-                System.Console.WriteLine($"Scale must be larger than 1.0. User provided [{scale}]");
-                success = false;
-                return success;
-            }
-
-            if (!File.Exists(args[0]))
-            {
-                System.Console.WriteLine($"ERROR: File [{args[0]}] does not exist.");
-                success = false;
-                return success;
-            }
-
-            #region args for scale and fillColor
-            if (args.Length > 1)
-            {
-                string scaleString = args[1];
-                float argValue = float.Parse(scaleString);
-                if (argValue > 1.0f)
-                {
-                    scale = argValue;
-                }
-                else
-                {
-                    scale = 1.0f + float.Parse(scaleString) / 100f;
-                }
-            }
-
-            if (args.Length > 2)
-            {
-                string[] comps = args[2].Split(new char[] { ',' });
-                fillColor = Color.FromArgb(int.Parse(comps[0]), int.Parse(comps[1]), int.Parse(comps[2]));
-            }
-            #endregion
 
             System.Console.WriteLine($"{"FillColor",-12} : {fillColor.R},{fillColor.G},{fillColor.B}");
             System.Console.WriteLine($"{"Scale",-12} : {scale}");
 
-            FileInfo fi = new FileInfo(args[0]);
+            FileInfo fi = srcFile;
             System.Console.WriteLine($"{"Source",-12} : {fi.FullName}");
             System.Console.WriteLine($"{"Size",-12} : {fi.Length:#,##0} bytes");
 
