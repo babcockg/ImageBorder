@@ -4,6 +4,7 @@ using System.Drawing;
 using System.Drawing.Imaging;
 using System.Drawing.Drawing2D;
 using Microsoft.Extensions.Configuration;
+using System.Globalization;
 
 namespace AddBorder
 {
@@ -11,11 +12,38 @@ namespace AddBorder
     {
         private static bool success = true;
 
+        public static float GetScale(string[] args)
+        {
+            float scale = 1.0f;
+            foreach (var arg in args)
+            {
+                float tempScale;
+                if (float.TryParse(arg, NumberStyles.AllowDecimalPoint, null, out tempScale))
+                {
+                    scale = tempScale;
+                }
+            }
+            return scale;
+        }
+
+        public static Color GetFillColor(string[] args)
+        {
+            Color result =  Color.FromArgb(0, 0, 0);
+            foreach (var arg in args)
+            {
+                string[] components = arg.Split(',');
+                if (components.Length == 3)
+                {
+                    result =  Color.FromArgb(255, int.Parse(components[0]), int.Parse(components[1]), int.Parse(components[2]));
+                }
+            }
+            return result;
+        }
         public static bool ProvideBorder(string[] args, IConfigurationRoot config)
         {
 
-            float scale = 1.05f;
-            Color fillColor = Color.FromArgb(0, 0, 0);
+            float scale = GetScale(args);
+            Color fillColor = GetFillColor(args);
 
             try
             {
@@ -38,7 +66,7 @@ namespace AddBorder
                 fillColor = Color.FromArgb(0, 0, 0);
             }
 
-            if ( scale <= 1.0f )
+            if (scale <= 1.0f)
             {
                 System.Console.WriteLine($"Scale must be larger than 1.0. User provided [{scale}]");
                 success = false;
